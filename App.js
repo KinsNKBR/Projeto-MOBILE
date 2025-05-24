@@ -22,7 +22,7 @@ const LoginScreen = ({ navigation }) => {
     setLoading(true);
     
     try {
-      // Validar formato do email
+      // Validar email com o final "@gmail.com"
       if (!email.endsWith('@gmail.com')) {
         Alert.alert('Erro', 'Email deve terminar com @gmail.com');
         return;
@@ -96,7 +96,7 @@ const SignupScreen = ({ navigation }) => {
 
   const handleSignup = async () => {
     try {
-      // Validações
+      // Validar email com o final "@gmail.com"
       if (!email.endsWith('@gmail.com')) {
         Alert.alert('Erro', 'Email deve terminar com @gmail.com');
         return;
@@ -164,7 +164,7 @@ const SignupScreen = ({ navigation }) => {
   );
 };
 
-// Tela Home
+// Tela inicial | Dashboard
 const HomeScreen = () => (
   <View style={styles.homeContainer}>
     <Text style={styles.homeText}>Bem-vindo à tela principal!</Text>
