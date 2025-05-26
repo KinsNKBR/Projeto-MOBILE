@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import * as SecureStore from 'expo-secure-store';
 import crypto from 'crypto-js';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
 
 // Função para criptografar dados
 const encryptData = (password) => {
@@ -28,15 +31,15 @@ const LoginScreen = ({ navigation }) => {
         return;
       }
 
-      // Buscar credenciais salvas
+      // Buscar as informações de login
       const storedEmail = await SecureStore.getItemAsync('user_email');
       const storedHash = await SecureStore.getItemAsync('user_password');
 
-      // Criptografar senha digitada
+      // Criptografar senha
       const hashedPassword = encryptData(password);
 
       if (email === storedEmail && hashedPassword === storedHash) {
-        navigation.navigate('Home');
+        navigation.navigate('Dashboard');
       } else {
         Alert.alert('Erro', 'Credenciais inválidas');
       }
@@ -88,7 +91,7 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
-// Tela de Cadastro
+// Tela de login
 const SignupScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -164,12 +167,59 @@ const SignupScreen = ({ navigation }) => {
   );
 };
 
-// Tela inicial | Dashboard
-const HomeScreen = () => (
-  <View style={styles.homeContainer}>
-    <Text style={styles.homeText}>Bem-vindo à tela principal!</Text>
-  </View>
-);
+// Tela Principal
+function HomeTabScreen() {
+  return (
+    <View style={styles.screen}>
+      <Text style={styles.title}>Bem-vindo à Home!</Text>
+    </View>
+  );
+}
+
+function ProfileScreen() {
+  return (
+    <View style={styles.screen}>
+      <Text style={styles.title}>Usuário</Text>
+    </View>
+  );
+}
+
+function ProdutosScreen() {
+  return (
+    <View style={styles.screen}>
+      <Text style={styles.title}>Lista de Produtos</Text>
+    </View>
+  );
+}
+
+// Tela principal | Abas
+const DashboardTabs = () => {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Usuário') {
+            iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'Produtos') {
+            iconName = focused ? 'cart' : 'cart-outline';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#007bff',
+        tabBarInactiveTintColor: 'gray',
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeTabScreen} />
+      <Tab.Screen name="Produtos" component={ProdutosScreen} />
+      <Tab.Screen name="Usuário" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+};
 
 // Estilos
 const styles = StyleSheet.create({
@@ -216,14 +266,11 @@ const styles = StyleSheet.create({
     color: '#007bff',
     fontSize: 14,
   },
-  homeContainer: {
+  screen: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',
-  },
-  homeText: {
-    fontSize: 20,
   },
 });
 
@@ -242,9 +289,9 @@ export default function App() {
           options={{ title: 'Criar Conta' }}
         />
         <Stack.Screen 
-          name="Home" 
-          component={HomeScreen} 
-          options={{ title: 'Início' }}
+          name="Dashboard" 
+          component={DashboardTabs} 
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>
