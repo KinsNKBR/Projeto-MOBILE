@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, FlatList, Modal, Button } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -184,44 +184,176 @@ function ProfileScreen() {
   );
 }
 
+// Tela de Produtos (integrada do segundo código)
 function ProdutosScreen() {
+  const [produtos, setProdutos] = useState([]);
+  const [filtro, setFiltro] = useState('quantidade');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [produtoEditando, setProdutoEditando] = useState(null);
+
+  const [form, setForm] = useState({
+    nome: '',
+    quantidade: '',
+    validade: '',
+    saidas: '',
+    preco: 0
+  });
+
+  useEffect(() => {
+    setProdutos([
+      { id: '1', nome: 'Arroz', quantidade: 0, validade: '06-01-2025', saidas: 50, preco: 5.5 },
+      { id: '2', nome: 'Feijão', quantidade: 10, validade: '12-10-2024', saidas: 30, preco: 7.2 }
+    ]);
+  }, []);
+
+  const abrirModalAdicionar = () => {
+    setForm({ nome: '', quantidade: '', validade: '', saidas: '', preco: 0 });
+    setProdutoEditando(null);
+    setModalVisible(true);
+  };
+
+  const abrirModalEditar = (produto) => {
+    setForm(produto);
+    setProdutoEditando(produto);
+    setModalVisible(true);
+  };
+
+  const salvarProduto = () => {
+    const novoProduto = {
+      ...form,
+      quantidade: parseInt(form.quantidade) || 0,
+      saidas: parseInt(form.saidas) || 0,
+      preco: parseFloat(form.preco) || 0
+    };
+
+    if (!novoProduto.nome || novoProduto.preco === 0) {
+      Alert.alert('Erro', 'Preencha o nome e o preço.');
+      return;
+    }
+
+    if (produtoEditando) {
+      setProdutos(produtos.map(p => (p.id === produtoEditando.id ? novoProduto : p)));
+    } else {
+      setProdutos([...produtos, { ...novoProduto, id: Date.now().toString() }]);
+    }
+
+    setModalVisible(false);
+  };
+
+  const excluirProduto = () => {
+    Alert.alert(
+      'Confirmar Exclusão',
+      `Deseja excluir o produto "${form.nome}"?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: () => {
+            setProdutos(produtos.filter(p => p.id !== produtoEditando.id));
+            setModalVisible(false);
+          }
+        }
+      ]
+    );
+  };
+
+  const filtrarProdutos = () => {
+    switch (filtro) {
+      case 'quantidade':
+        return [...produtos].sort((a, b) => a.quantidade - b.quantidade);
+      case 'vencimento':
+        return [...produtos].sort((a, b) => new Date(a.validade) - new Date(b.validade));
+      case 'saida':
+        return [...produtos].sort((a, b) => b.saidas - a.saidas);
+      default:
+        return produtos;
+    }
+  };
+
   return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>Lista de Produtos</Text>
+    <View style={stylesProdutos.container}>
+      <Text style={stylesProdutos.title}>Relatórios Gerenciais</Text>
+
+      <View style={stylesProdutos.buttons}>
+        <Button title="Por Quantidade" onPress={() => setFiltro('quantidade')} />
+        <Button title="Por Vencimento" onPress={() => setFiltro('vencimento')} />
+        <Button title="Por Saída" onPress={() => setFiltro('saida')} />
+        <Button title="Adicionar Produto" onPress={abrirModalAdicionar} color="green" />
+      </View>
+
+      <FlatList
+        data={filtrarProdutos()}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => abrirModalEditar(item)}>
+            <View style={stylesProdutos.item}>
+              <Text>Nome: {item.nome}</Text>
+              <Text>Quantidade: {item.quantidade}</Text>
+              <Text>Validade: {item.validade}</Text>
+              <Text>Saídas: {item.saidas}</Text>
+              <Text style={{ color: 'green' }}>
+                Preço: R$ {Number(item.preco || 0).toFixed(2)}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+      />
+
+      <Modal visible={modalVisible} animationType="slide">
+        <View style={stylesProdutos.modalContent}>
+          <Text style={stylesProdutos.modalTitle}>
+            {produtoEditando ? 'Editar Produto' : 'Adicionar Produto'}
+          </Text>
+
+          <TextInput
+            style={stylesProdutos.input}
+            placeholder="Nome"
+            value={form.nome}
+            onChangeText={(text) => setForm({ ...form, nome: text })}
+          />
+          <TextInput
+            style={stylesProdutos.input}
+            placeholder="Quantidade"
+            keyboardType="numeric"
+            value={form.quantidade.toString()}
+            onChangeText={(text) => setForm({ ...form, quantidade: text })}
+          />
+          <TextInput
+            style={stylesProdutos.input}
+            placeholder="Validade (Dia-Mes-Ano)"
+            value={form.validade}
+            onChangeText={(text) => setForm({ ...form, validade: text })}
+          />
+          <TextInput
+            style={stylesProdutos.input}
+            placeholder="Saídas"
+            keyboardType="numeric"
+            value={form.saidas.toString()}
+            onChangeText={(text) => setForm({ ...form, saidas: text })}
+          />
+          <TextInput
+            style={stylesProdutos.input}
+            placeholder="Preço"
+            keyboardType="numeric"
+            value={form.preco.toString()}
+            onChangeText={(text) => setForm({ ...form, preco: text })}
+          />
+
+          <View style={stylesProdutos.modalButtons}>
+            <Button title="Salvar" onPress={salvarProduto} />
+            <Button title="Cancelar" color="gray" onPress={() => setModalVisible(false)} />
+            {produtoEditando && (
+              <Button title="Excluir" color="red" onPress={excluirProduto} />
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
-// Tela principal | Abas
-const DashboardTabs = () => {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Usuário') {
-            iconName = focused ? 'person' : 'person-outline';
-          } else if (route.name === 'Produtos') {
-            iconName = focused ? 'cart' : 'cart-outline';
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#007bff',
-        tabBarInactiveTintColor: 'gray',
-      })}
-    >
-      <Tab.Screen name="Home" component={HomeTabScreen} />
-      <Tab.Screen name="Produtos" component={ProdutosScreen} />
-      <Tab.Screen name="Usuário" component={ProfileScreen} />
-    </Tab.Navigator>
-  );
-};
-
-// Estilos
+// Estilos da tela principal
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -274,6 +406,67 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
 });
+
+// Estilos específicos para a tela de produtos
+const stylesProdutos = StyleSheet.create({
+  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  buttons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+    marginBottom: 20
+  },
+  item: {
+    padding: 10,
+    backgroundColor: '#eee',
+    marginBottom: 10,
+    borderRadius: 5
+  },
+  modalContent: { flex: 1, justifyContent: 'center', padding: 20 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5
+  },
+  modalButtons: {
+    flexDirection: 'column',
+    gap: 10,
+    marginTop: 20
+  }
+});
+
+// Tela principal | Abas
+const DashboardTabs = () => {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Usuário') {
+            iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'Produtos') {
+            iconName = focused ? 'cart' : 'cart-outline';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#007bff',
+        tabBarInactiveTintColor: 'gray',
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeTabScreen} />
+      <Tab.Screen name="Produtos" component={ProdutosScreen} />
+      <Tab.Screen name="Usuário" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+};
 
 export default function App() {
   return (
