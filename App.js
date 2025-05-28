@@ -227,11 +227,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#000000',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: '#ffffff',
     marginBottom: 30,
     textAlign: 'center',
   },
@@ -246,7 +247,7 @@ const styles = StyleSheet.create({
   },
   button: {
     height: 50,
-    backgroundColor: '#007bff',
+    backgroundColor: '#7a0dff',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
