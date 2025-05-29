@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, FlatList, Modal, Button } from 'react-native';
+import { 
+  StyleSheet, 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  Alert, 
+  FlatList, 
+  Modal, 
+  Button 
+} from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -25,17 +35,14 @@ const LoginScreen = ({ navigation }) => {
     setLoading(true);
     
     try {
-      // Validar email com o final "@gmail.com"
       if (!email.endsWith('@gmail.com')) {
         Alert.alert('Erro', 'Email deve terminar com @gmail.com');
         return;
       }
 
-      // Buscar as informações de login
       const storedEmail = await SecureStore.getItemAsync('user_email');
       const storedHash = await SecureStore.getItemAsync('user_password');
 
-      // Criptografar senha
       const hashedPassword = encryptData(password);
 
       if (email === storedEmail && hashedPassword === storedHash) {
@@ -91,7 +98,7 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
-// Tela de login
+// Tela de Cadastro
 const SignupScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -99,7 +106,6 @@ const SignupScreen = ({ navigation }) => {
 
   const handleSignup = async () => {
     try {
-      // Validar email com o final "@gmail.com"
       if (!email.endsWith('@gmail.com')) {
         Alert.alert('Erro', 'Email deve terminar com @gmail.com');
         return;
@@ -115,7 +121,6 @@ const SignupScreen = ({ navigation }) => {
         return;
       }
 
-      // Criptografar e armazenar
       const hashedPassword = encryptData(password);
       
       await SecureStore.setItemAsync('user_email', email);
@@ -167,7 +172,7 @@ const SignupScreen = ({ navigation }) => {
   );
 };
 
-// Tela Principal
+// Tela Home
 function HomeTabScreen() {
   return (
     <View style={styles.screen}>
@@ -176,21 +181,12 @@ function HomeTabScreen() {
   );
 }
 
-function ProfileScreen() {
-  return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>Usuário</Text>
-    </View>
-  );
-}
-
-// Tela de Produtos (integrada do segundo código)
+// Tela de Produtos
 function ProdutosScreen() {
   const [produtos, setProdutos] = useState([]);
   const [filtro, setFiltro] = useState('quantidade');
   const [modalVisible, setModalVisible] = useState(false);
   const [produtoEditando, setProdutoEditando] = useState(null);
-
   const [form, setForm] = useState({
     nome: '',
     quantidade: '',
@@ -353,7 +349,59 @@ function ProdutosScreen() {
   );
 }
 
-// Estilos da tela principal
+// Tela de Usuário
+function ProfileScreen() {
+  const [email, setEmail] = useState('');
+  const [showFullEmail, setShowFullEmail] = useState(false);
+
+  useEffect(() => {
+    const loadEmail = async () => {
+      const storedEmail = await SecureStore.getItemAsync('user_email');
+      setEmail(storedEmail || '');
+    };
+    loadEmail();
+  }, []);
+
+  const getUsername = () => {
+    if (!email) return 'Usuário';
+    return email.split('@')[0];
+  };
+
+  const getMaskedEmail = () => {
+    if (!email) return '*****';
+    const [username, domain] = email.split('@');
+    const maskedUsername = username.substring(0, 2) + '****' + username.slice(-2);
+    return `${maskedUsername}@${domain}`;
+  };
+
+  return (
+    <View style={styles.profileScreen}>
+      <Text style={styles.userTitle}>Informações do Usuário</Text>
+      
+      <View style={styles.userInfoContainer}>
+        <Text style={styles.userLabel}>Usuário:</Text>
+        <Text style={styles.userValue}>{getUsername()}</Text>
+      </View>
+
+      <View style={styles.userInfoContainer}>
+        <Text style={styles.userLabel}>Email:</Text>
+        <Text style={styles.userValue}>
+          {showFullEmail ? email : getMaskedEmail()}
+        </Text>
+        <TouchableOpacity 
+          style={styles.toggleButton}
+          onPress={() => setShowFullEmail(!showFullEmail)}
+        >
+          <Text style={styles.toggleButtonText}>
+            {showFullEmail ? 'Ocultar' : 'Mostrar'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -405,6 +453,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'white',
   },
+  profileScreen: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: 'white',
+  },
+  userTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 30,
+    textAlign: 'center',
+    color: '#333',
+  },
+  userInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    padding: 15,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+  },
+  userLabel: {
+    fontWeight: 'bold',
+    marginRight: 10,
+    color: '#333',
+    width: 80,
+  },
+  userValue: {
+    flex: 1,
+    color: '#555',
+  },
+  toggleButton: {
+    backgroundColor: '#7a0dff',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
+  toggleButtonText: {
+    color: 'white',
+    fontSize: 12,
+  },
 });
 
 // Estilos específicos para a tela de produtos
@@ -439,7 +528,7 @@ const stylesProdutos = StyleSheet.create({
   }
 });
 
-// Tela principal | Abas
+// Navegação por abas
 const DashboardTabs = () => {
   return (
     <Tab.Navigator
@@ -468,6 +557,7 @@ const DashboardTabs = () => {
   );
 };
 
+// App principal
 export default function App() {
   return (
     <NavigationContainer>
