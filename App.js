@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  Alert, 
-  FlatList, 
-  Modal, 
-  Button 
+import {
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  FlatList,
+  Modal,
+  Button,
+  Vibration // Importado para a funcionalidade de vibração
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -33,7 +34,7 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     setLoading(true);
-    
+
     try {
       if (!email.endsWith('@gmail.com')) {
         Alert.alert('Erro', 'Email deve terminar com @gmail.com');
@@ -60,7 +61,7 @@ const LoginScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
-      
+
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -69,7 +70,7 @@ const LoginScreen = ({ navigation }) => {
         keyboardType="email-address"
         autoCapitalize="none"
       />
-      
+
       <TextInput
         style={styles.input}
         placeholder="Senha"
@@ -77,9 +78,9 @@ const LoginScreen = ({ navigation }) => {
         value={password}
         onChangeText={setPassword}
       />
-      
-      <TouchableOpacity 
-        style={styles.button} 
+
+      <TouchableOpacity
+        style={styles.button}
         onPress={handleLogin}
         disabled={loading}
       >
@@ -88,7 +89,7 @@ const LoginScreen = ({ navigation }) => {
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.secondaryButton}
         onPress={() => navigation.navigate('Signup')}
       >
@@ -122,7 +123,7 @@ const SignupScreen = ({ navigation }) => {
       }
 
       const hashedPassword = encryptData(password);
-      
+
       await SecureStore.setItemAsync('user_email', email);
       await SecureStore.setItemAsync('user_password', hashedPassword);
 
@@ -136,7 +137,7 @@ const SignupScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Criar Conta</Text>
-      
+
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -145,7 +146,7 @@ const SignupScreen = ({ navigation }) => {
         keyboardType="email-address"
         autoCapitalize="none"
       />
-      
+
       <TextInput
         style={styles.input}
         placeholder="Senha"
@@ -153,7 +154,7 @@ const SignupScreen = ({ navigation }) => {
         value={password}
         onChangeText={setPassword}
       />
-      
+
       <TextInput
         style={styles.input}
         placeholder="Confirmar Senha"
@@ -161,9 +162,9 @@ const SignupScreen = ({ navigation }) => {
         value={confirmPassword}
         onChangeText={setConfirmPassword}
       />
-      
-      <TouchableOpacity 
-        style={styles.button} 
+
+      <TouchableOpacity
+        style={styles.button}
         onPress={handleSignup}
       >
         <Text style={styles.buttonText}>Criar Conta</Text>
@@ -231,6 +232,7 @@ function ProdutosScreen() {
       setProdutos(produtos.map(p => (p.id === produtoEditando.id ? novoProduto : p)));
     } else {
       setProdutos([...produtos, { ...novoProduto, id: Date.now().toString() }]);
+      Vibration.vibrate(); // VIBRA AO ADICIONAR NOVO PRODUTO
     }
 
     setModalVisible(false);
@@ -377,7 +379,7 @@ function ProfileScreen() {
   return (
     <View style={styles.profileScreen}>
       <Text style={styles.userTitle}>Informações do Usuário</Text>
-      
+
       <View style={styles.userInfoContainer}>
         <Text style={styles.userLabel}>Usuário:</Text>
         <Text style={styles.userValue}>{getUsername()}</Text>
@@ -388,7 +390,7 @@ function ProfileScreen() {
         <Text style={styles.userValue}>
           {showFullEmail ? email : getMaskedEmail()}
         </Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.toggleButton}
           onPress={() => setShowFullEmail(!showFullEmail)}
         >
@@ -562,19 +564,19 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen 
-          name="Login" 
+        <Stack.Screen
+          name="Login"
           component={LoginScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="Signup" 
+        <Stack.Screen
+          name="Signup"
           component={SignupScreen}
           options={{ title: 'Criar Conta' }}
         />
-        <Stack.Screen 
-          name="Dashboard" 
-          component={DashboardTabs} 
+        <Stack.Screen
+          name="Dashboard"
+          component={DashboardTabs}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
