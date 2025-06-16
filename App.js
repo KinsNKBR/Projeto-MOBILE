@@ -9,14 +9,24 @@ import {
   FlatList,
   Modal,
   Button,
-  Vibration // Importado para a funcionalidade de vibração
+  Vibration
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import * as SecureStore from 'expo-secure-store';
+import * as Notifications from 'expo-notifications';
 import crypto from 'crypto-js';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+
+// Configurar as notificações
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -203,6 +213,18 @@ function ProdutosScreen() {
     ]);
   }, []);
 
+  const enviarNotificacao = async (nomeProduto) => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Novo Produto Adicionado!',
+        body: `O produto ${nomeProduto} foi adicionado com sucesso.`,
+        sound: true,
+        vibrate: [0, 250, 250, 250],
+      },
+      trigger: null, // Envia imediatamente
+    });
+  };
+
   const abrirModalAdicionar = () => {
     setForm({ nome: '', quantidade: '', validade: '', saidas: '', preco: 0 });
     setProdutoEditando(null);
@@ -215,7 +237,7 @@ function ProdutosScreen() {
     setModalVisible(true);
   };
 
-  const salvarProduto = () => {
+  const salvarProduto = async () => {
     const novoProduto = {
       ...form,
       quantidade: parseInt(form.quantidade) || 0,
@@ -233,6 +255,7 @@ function ProdutosScreen() {
     } else {
       setProdutos([...produtos, { ...novoProduto, id: Date.now().toString() }]);
       Vibration.vibrate(); // VIBRA AO ADICIONAR NOVO PRODUTO
+      await enviarNotificacao(novoProduto.nome); // ENVIA NOTIFICAÇÃO
     }
 
     setModalVisible(false);
@@ -561,6 +584,17 @@ const DashboardTabs = () => {
 
 // App principal
 export default function App() {
+  useEffect(() => {
+    // Solicitar permissão para notificações quando o app inicia
+    const configurarNotificacoes = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permissão negada', 'Você não receberá notificações.');
+      }
+    };
+    configurarNotificacoes();
+  }, []);
+
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
