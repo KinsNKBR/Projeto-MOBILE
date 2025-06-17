@@ -280,15 +280,22 @@ function ProdutosScreen() {
   };
 
   const filtrarProdutos = () => {
+    const produtosOrdenados = [...produtos];
+    
     switch (filtro) {
       case 'quantidade':
-        return [...produtos].sort((a, b) => a.quantidade - b.quantidade);
+        return produtosOrdenados.sort((a, b) => a.quantidade - b.quantidade);
       case 'vencimento':
-        return [...produtos].sort((a, b) => new Date(a.validade) - new Date(b.validade));
+        return produtosOrdenados.sort((a, b) => {
+          // Converta as datas para o formato Date para comparação
+          const dateA = new Date(a.validade.split('-').reverse().join('-'));
+          const dateB = new Date(b.validade.split('-').reverse().join('-'));
+          return dateA - dateB;
+        });
       case 'saida':
-        return [...produtos].sort((a, b) => b.saidas - a.saidas);
+        return produtosOrdenados.sort((a, b) => b.saidas - a.saidas);
       default:
-        return produtos;
+        return produtosOrdenados;
     }
   };
 
@@ -616,4 +623,4 @@ export default function App() {
       </Stack.Navigator>
     </NavigationContainer>
   );
-}
+} 
